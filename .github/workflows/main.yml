@@ -13,23 +13,22 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. リポジトリのソースコードをチェックアウト (変更なし)
+      # 1. チェックアウト (変更なし)
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 2. ISO作成ツールをインストール (変更なし)
+      # 2. ツールをインストール (変更なし)
       - name: Install build dependencies
         run: sudo apt-get update && sudo apt-get install -y genisoimage
 
-      # 3. cdrom.isoを作成 (変更なし)
+      # 3. ISOを作成 (変更なし)
       - name: Create ISO image
         run: mkisofs -o cdrom.iso -J -R iso_contents/
         
-      # ▼▼▼ ここから下を変更 ▼▼▼
-      # 4. リリースの作成とISOファイルのアップロードをまとめて実行
+      # 4. リリースの作成とアップロード
       - name: Create or Update Release and Upload ISO
+        # ▼▼▼ 変更点: このif条件を1行追加 ▼▼▼
+        if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
-          # 作成したISOファイルを指定します
-          # 複数ある場合は改行して列挙できます
           files: cdrom.iso
