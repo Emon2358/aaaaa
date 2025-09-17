@@ -8,46 +8,28 @@ on:
       - 'v*'
   workflow_dispatch:
 
-permissions:
-  contents: write
-
 jobs:
   build-and-release-iso:
     runs-on: ubuntu-latest
 
     steps:
+      # 1. リポジトリのソースコードをチェックアウト (変更なし)
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # 2. ISO作成ツールをインストール (変更なし)
       - name: Install build dependencies
         run: sudo apt-get update && sudo apt-get install -y genisoimage
 
+      # 3. cdrom.isoを作成 (変更なし)
       - name: Create ISO image
         run: mkisofs -o cdrom.iso -J -R iso_contents/
         
-      # 4. タグを元にGitHubリリースを作成
-      - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # ▼▼▼ ここから下を変更 ▼▼▼
+      # 4. リリースの作成とISOファイルのアップロードをまとめて実行
+      - name: Create or Update Release and Upload ISO
+        uses: softprops/action-gh-release@v2
         with:
-          # ▼ 変更点1: github.ref を github.ref_name に変更
-          tag_name: ${{ github.ref_name }}
-          # ▼ 変更点2: こちらも同様に github.ref_name に変更
-          release_name: Release ${{ github.ref_name }}
-          body: |
-            Automated release with CD-ROM image.
-          draft: false
-          prerelease: false
-
-      # 5. 作成したリリースにISOファイルをアップロード
-      - name: Upload ISO to Release
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./cdrom.iso
-          asset_name: cdrom.iso
-          asset_content_type: application/x-iso9660-image
+          # 作成したISOファイルを指定します
+          # 複数ある場合は改行して列挙できます
+          files: cdrom.iso
